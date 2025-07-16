@@ -8,7 +8,7 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-from creds import username, password, facility_name, latest_notification_date, seconds_between_checks
+from creds import *
 from telegram import send_message, send_photo
 from urls import BASE_URL, SIGN_IN_URL, SCHEDULE_URL, APPOINTMENTS_URL
 
@@ -54,6 +54,17 @@ def check_appointments(driver):
 
     driver.get(APPOINTMENTS_URL)
 
+    # Press "I understand check" box
+    driver.find_element(By.XPATH, '//*[@id="main"]/div[3]/div/div/form/div[1]/div/div').click()
+    time.sleep(1)
+
+    # Clicking the Continue button in case of rescheduling multiple people to include all
+    continue_button = driver.find_element(By.CLASS_NAME, 'primary')
+    if continue_button and continue_button.get_property('value') == 'Continue':
+        continue_button.click()
+
+    time.sleep(1)
+
     # Clicking the Continue button in case of rescheduling multiple people to include all
     continue_button = driver.find_element(By.CLASS_NAME, 'primary')
     if continue_button and continue_button.get_property('value') == 'Continue':
@@ -96,10 +107,27 @@ def check_appointments(driver):
 
 def main():
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
 
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    if use_web_driver:
+        # Remote docker
+        print("Wait loading selenium...")
+        time.sleep(wait_web_driver)
+
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        driver = webdriver.Remote(
+            command_executor=remote_web_driver,
+            options=chrome_options
+        )
+
+    else:
+        # Local Chrome
+        if local_debugger_address:
+            chrome_options.debugger_address = local_debugger_address  # use if debugger_address
+        chrome_options.add_argument("--headless")
+        service = Service(ChromeDriverManager(driver_version=driver_version).install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
 
     while True:
         current_time = time.strftime('%a, %d %b %Y %H:%M:%S', time.localtime())

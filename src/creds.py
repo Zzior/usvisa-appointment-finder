@@ -1,8 +1,19 @@
+from pathlib import Path
 from jproperties import Properties
 
+project_dir = Path(__file__).resolve().parent.parent
+
+
 configs = Properties()
-with open('../config/app-config.properties', 'rb') as config_file:
+with open(project_dir / 'config/app-config.properties', 'rb') as config_file:
     configs.load(config_file)
+
+# web driver
+use_web_driver = True if configs.get('use_web_driver').data == "True" else False
+local_debugger_address = configs.get('local_debugger_address').data
+wait_web_driver = int(configs.get('wait_web_driver').data)
+remote_web_driver = configs.get('remote_web_driver').data
+driver_version = configs.get('driver_version').data or None
 
 # ais.usvisa-info.com credentials
 

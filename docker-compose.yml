@@ -1,0 +1,11 @@
+services:
+  selenium:
+    image: selenium/standalone-chrome
+    container_name: selenium
+    shm_size: 2gb
+
+  app:
+    build:
+      context: .
+    depends_on:
+      - selenium
